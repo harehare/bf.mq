@@ -1,0 +1,134 @@
+# Brainfuck Interpreter in mq
+# Brainfuck commands:
+# > : increment the data pointer
+# < : decrement the data pointer
+# + : increment the byte at the data pointer
+# - : decrement the byte at the data pointer
+# . : output the byte at the data pointer
+# , : input a byte and store it at the data pointer
+# [ : if the byte at the data pointer is zero, jump forward to the instruction after the matching ]
+# ] : if the byte at the data pointer is nonzero, jump back to the instruction after the matching [
+
+def create_memory(size): fill(0, size);
+
+def chars(s): explode(s) | map(fn(x): implode([x]););
+
+def safe_get_memory(memory, pointer):
+  if (and(pointer >= 0, pointer < len(memory))):
+    nth(memory, pointer)
+  else:
+    0
+end
+
+def normalize_value(memory, pointer, value):
+  let normalized_value = value % 256
+  | let normalized_value = if (normalized_value < 0): normalized_value + 256 else: normalized_value
+  | set(memory, pointer, normalized_value)
+
+end
+
+def safe_set_memory(memory, pointer, value):
+  if (pointer >= 0 && pointer < len(memory)):
+    normalize_value(memory, pointer, value)
+  else:
+    memory
+end
+
+def find_matching_bracket(program, start_pos, direction):
+  let bracket_count = 1
+  | let pos = start_pos + direction
+  | let open_bracket = if (direction == 1): "[" else: "]"
+  | let close_bracket = if (direction == 1): "]" else: "["
+  | until (pos >= 0 && pos < len(program) && bracket_count > 0):
+      let char = nth(program, pos)
+      | let bracket_count = if (char == open_bracket): bracket_count + 1
+    elif (char == close_bracket): bracket_count - 1
+    else: bracket_count
+      | let pos = if (bracket_count > 0): pos + direction else: pos
+      | pos
+    end
+end
+
+def increment_cell(memory, data_pointer, instruction_pointer, input_pointer, output):
+  let current_value = safe_get_memory(memory, data_pointer)
+  | let new_value = current_value + 1
+  | let memory = safe_set_memory(memory, data_pointer, new_value)
+  | [memory, data_pointer, instruction_pointer + 1, input_pointer, output]
+end
+
+def decrement_cell(memory, data_pointer, instruction_pointer, input_pointer, output):
+  let current_value = safe_get_memory(memory, data_pointer)
+  | let new_value = current_value - 1
+  | let memory = safe_set_memory(memory, data_pointer, new_value)
+  | [memory, data_pointer, instruction_pointer + 1, input_pointer, output]
+end
+
+def output_cell(memory, data_pointer, instruction_pointer, input_pointer, output):
+  let current_value = safe_get_memory(memory, data_pointer)
+  | let char_output = implode([current_value])
+  | let output = output + char_output
+  | [memory, data_pointer, instruction_pointer + 1, input_pointer, output]
+end
+
+def input_cell(memory, input_chars, data_pointer, instruction_pointer, input_pointer, output):
+  let input_value = if (len(input_chars) <= input_pointer): 0 else: first(explode(nth(input_chars, input_pointer)))
+  | let memory = safe_set_memory(memory, data_pointer, input_value)
+  | [memory, data_pointer, instruction_pointer + 1, input_pointer + 1, output]
+end
+
+def begin_loop(memory, program_chars, data_pointer, instruction_pointer, input_pointer, output):
+  let current_value = safe_get_memory(memory, data_pointer)
+  | let instruction_pointer = if (current_value == 0):
+      find_matching_bracket(program_chars, instruction_pointer, 1) + 1
+    else:
+      instruction_pointer + 1
+  | [memory, data_pointer, instruction_pointer, input_pointer, output]
+end
+
+def end_loop(memory, program_chars, data_pointer, instruction_pointer, input_pointer, output):
+  let current_value = safe_get_memory(memory, data_pointer)
+  | let instruction_pointer = if (current_value != 0):
+      find_matching_bracket(program_chars, instruction_pointer, -1) + 1
+    else:
+      instruction_pointer + 1
+  | [memory, data_pointer, instruction_pointer, input_pointer, output]
+end
+
+def interpret_brainfuck(program, input_str, memory_size):
+  let memory = create_memory(memory_size)
+  | let program_chars = chars(program)
+  | let input_chars = chars(input_str)
+  | let data_pointer = 0
+  | let instruction_pointer = 0
+  | let input_pointer = 0
+  | let output = ""
+  | until (instruction_pointer < len(program_chars)):
+      let command = nth(program_chars, instruction_pointer)
+      | let result = if (command == ">"):
+      [memory, data_pointer + 1, instruction_pointer + 1, input_pointer, output]
+    elif (command == "<"):
+      [memory, data_pointer - 1, instruction_pointer + 1, input_pointer, output]
+    elif (command == "+"):
+      increment_cell(memory, data_pointer, instruction_pointer, input_pointer, output)
+    elif (command == "-"):
+      decrement_cell(memory, data_pointer, instruction_pointer, input_pointer, output)
+    elif (command == "."):
+      output_cell(memory, data_pointer, instruction_pointer, input_pointer, output)
+    elif (command == ","):
+      input_cell(memory, input_chars, data_pointer, instruction_pointer, input_pointer, output)
+    elif (command == "["):
+      begin_loop(memory, program_chars, data_pointer, instruction_pointer, input_pointer, output)
+    elif (command == "]"):
+      end_loop(memory, program_chars, data_pointer, instruction_pointer, input_pointer, output)
+    else:
+      [memory, data_pointer, instruction_pointer + 1, input_pointer, output]
+
+      | let memory = nth(result, 0)
+      | let data_pointer = nth(result, 1)
+      | let instruction_pointer = nth(result, 2)
+      | let input_pointer = nth(result, 3)
+      | let output = nth(result, 4)
+      | result
+    end
+  | nth(4)
+end
