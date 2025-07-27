@@ -15,7 +15,7 @@ def chars(s): explode(s) | map(fn(x): implode([x]););
 
 def safe_get_memory(memory, pointer):
   if (and(pointer >= 0, pointer < len(memory))):
-    nth(memory, pointer)
+    memory[pointer]
   else:
     0
 end
@@ -40,7 +40,7 @@ def find_matching_bracket(program, start_pos, direction):
   | let open_bracket = if (direction == 1): "[" else: "]"
   | let close_bracket = if (direction == 1): "]" else: "["
   | until (pos >= 0 && pos < len(program) && bracket_count > 0):
-      let char = nth(program, pos)
+      let char = program[pos]
       | let bracket_count = if (char == open_bracket): bracket_count + 1
     elif (char == close_bracket): bracket_count - 1
     else: bracket_count
@@ -71,7 +71,7 @@ def output_cell(memory, data_pointer, instruction_pointer, input_pointer, output
 end
 
 def input_cell(memory, input_chars, data_pointer, instruction_pointer, input_pointer, output):
-  let input_value = if (len(input_chars) <= input_pointer): 0 else: first(explode(nth(input_chars, input_pointer)))
+  let input_value = if (len(input_chars) <= input_pointer): 0 else: first(explode(input_chars[input_pointer]))
   | let memory = safe_set_memory(memory, data_pointer, input_value)
   | [memory, data_pointer, instruction_pointer + 1, input_pointer + 1, output]
 end
@@ -103,7 +103,7 @@ def interpret_brainfuck(program, input_str, memory_size):
   | let input_pointer = 0
   | let output = ""
   | until (instruction_pointer < len(program_chars)):
-      let command = nth(program_chars, instruction_pointer)
+      let command = program_chars[instruction_pointer]
       | let result = if (command == ">"):
       [memory, data_pointer + 1, instruction_pointer + 1, input_pointer, output]
     elif (command == "<"):
@@ -123,12 +123,12 @@ def interpret_brainfuck(program, input_str, memory_size):
     else:
       [memory, data_pointer, instruction_pointer + 1, input_pointer, output]
 
-      | let memory = nth(result, 0)
-      | let data_pointer = nth(result, 1)
-      | let instruction_pointer = nth(result, 2)
-      | let input_pointer = nth(result, 3)
-      | let output = nth(result, 4)
+      | let memory = result[0]
+      | let data_pointer = result[1]
+      | let instruction_pointer = result[2]
+      | let input_pointer = result[3]
+      | let output = result[4]
       | result
     end
-  | nth(4)
+  | get(4)
 end
