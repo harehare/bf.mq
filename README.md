@@ -39,7 +39,7 @@ This project provides a complete Brainfuck interpreter that can execute Brainfuc
 ### Direct mq usage
 
 ```bash
-mq "include \"bf\" | interpret_brainfuck(\"program_code\", \"input\", memory_size)"
+mq 'include "bf" | interpret_brainfuck("program_code", "input", memory_size)'
 ```
 
 ## Brainfuck Commands
