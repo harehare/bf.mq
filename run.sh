@@ -24,11 +24,11 @@ if [[ "$1" == "-h" || "$1" == "--help" ]]; then
     exit 0
 fi
 
-echo "Running Brainfuck interpreter"
-echo "Program: $PROGRAM"
-echo "Input: $INPUT_STR"
-echo "Memory size: $MEMORY_SIZE"
-echo ""
+echo "Running Brainfuck interpreter" >&2
+echo "Program: $PROGRAM" >&2
+echo "Input: $INPUT_STR" >&2
+echo "Memory size: $MEMORY_SIZE" >&2
+echo "" >&2
 
 # Run the mq interpreter with the brainfuck program
-mq -I null "include \"bf\" | interpret_brainfuck(\"$PROGRAM\", \"$INPUT_STR\", $MEMORY_SIZE)"
+mq "include \"bf\" | interpret_brainfuck(\"$PROGRAM\", \"$INPUT_STR\", $MEMORY_SIZE)"
